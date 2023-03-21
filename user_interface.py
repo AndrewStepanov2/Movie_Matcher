@@ -58,10 +58,10 @@ class MovieMatcher(App):
     def press_host_button(self, instance):
         self.window.remove_widget(self.host_button)
         self.window.remove_widget(self.join_button)
-        variables_for_user_link.append(True)
+        variables_for_user_link.append(True) # for storing a boolean value to stop the accepting thread when voting is ready to begin
         server, thread = user_link.start_hosting(variables_for_user_link)
-        variables_for_user_link.append(server)
-        variables_for_user_link.append(thread)
+        variables_for_user_link.append(server) # for storing the socket used by the host for the server
+        variables_for_user_link.append(thread) # for storing the accepting thread
         self.window.add_widget(self.IP_label)
         self.window.add_widget(self.start_button)
         
@@ -79,8 +79,8 @@ class MovieMatcher(App):
     # Terminate the thread accepting non-hosts
     # Remove the label for the host's IP address and the button to start the voting
     def press_start_button(self, instance):
-        variables_for_user_link[0] = False
-        variables_for_user_link[5].join()
+        variables_for_user_link[0] = False # stops the accepting thread
+        variables_for_user_link[5].join() # waits for the accepting thread to terminate
         self.window.remove_widget(self.IP_label)
         self.window.remove_widget(self.start_button)
 
@@ -95,10 +95,10 @@ class MovieMatcher(App):
     # user_link.client_join_server will start a thread for the connection to the host
     # Remove the text input for entering the host's IP address and the connect button
     def press_connect_button(self, instance):
-        variables_for_user_link.append(True)
+        variables_for_user_link.append(True) # for storing a boolean value that we can change to stop the client's thread that handles communication with the server
         client, thread = user_link.client_join_server(self.input_IP.text, variables_for_user_link)
-        variables_for_user_link.append(client)
-        variables_for_user_link.append(thread)
+        variables_for_user_link.append(client) # for storing the client's socket for communicating with the host
+        variables_for_user_link.append(thread) # for storing the thread used by the client to handle communication with the host
         self.window.remove_widget(self.input_IP)
         self.window.remove_widget(self.connect_button)
 
