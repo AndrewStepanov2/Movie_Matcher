@@ -8,6 +8,9 @@ import user_link
 import threading
 variables_for_user_link = []
 
+data_structure_movies_list = []
+seen_movies_list = []
+
 class MovieMatcher(App):
 
     def build(self):
