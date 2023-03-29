@@ -18,9 +18,9 @@ def start_hosting(variables_for_user_link):
     server.bind((get_IP(), 42424))
     server.settimeout(0.2)
     server.listen()
-    variables_for_user_link.append([])
-    variables_for_user_link.append([])
-    variables_for_user_link.append([])
+    variables_for_user_link.append([]) # for storing the clients that join the server run by the host
+    variables_for_user_link.append([]) # for storing boolean values that we can change to stop the threads that handle the clients
+    variables_for_user_link.append([]) # for storing the threads that handles the clients
     thread = threading.Thread(target=host_accept_client, args=(server, variables_for_user_link))
     thread.start()
     return (server, thread)
