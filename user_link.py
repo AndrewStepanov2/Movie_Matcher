@@ -13,7 +13,7 @@ def get_IP():
 
 # Sets up a socket for the host
 # Starts a thread for accepting clients
-def start_hosting(variables_for_user_link):
+def start_hosting(variables_for_user_link, movie_database):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((get_IP(), 42424))
     server.settimeout(0.2)
@@ -23,13 +23,13 @@ def start_hosting(variables_for_user_link):
     variables_for_user_link.append([]) # for storing the movie title and vote of a client
     variables_for_user_link.append([]) # for storing a boolean value to indicate if a client has voted or not
     variables_for_user_link.append([]) # for storing the threads that handles the clients
-    thread = threading.Thread(target=host_accept_client, args=(server, variables_for_user_link))
+    thread = threading.Thread(target=host_accept_client, args=(server, variables_for_user_link, movie_database))
     thread.start()
     return (server, thread)
 
 # Function for a thread for the host to accept clients
 # Starts a thread for each client
-def host_accept_client(server, variables_for_user_link):
+def host_accept_client(server, variables_for_user_link, movie_database):
     clientID = 0
     while variables_for_user_link[0]:
         try:
@@ -38,7 +38,7 @@ def host_accept_client(server, variables_for_user_link):
             variables_for_user_link[2].append(True)
             variables_for_user_link[3].append("")
             variables_for_user_link[4].append(False)
-            thread = threading.Thread(target=host_serve_client, args=((client, clientID, variables_for_user_link)))
+            thread = threading.Thread(target=host_serve_client, args=((client, clientID, variables_for_user_link, movie_database)))
             thread.start()
             variables_for_user_link[5].append(thread)
             clientID += 1
@@ -49,9 +49,11 @@ def host_accept_client(server, variables_for_user_link):
 # Function to be used by the host
 # Function for the threads for each client to run
 # For right now, it does nothing interesting
-def host_serve_client(client, clientID, variables_for_user_link):
+def host_serve_client(client, clientID, variables_for_user_link, movie_database):
+    while movie_database[0] == "Wait":
+        """Wait for the database to be generated"""
     client.settimeout(0.2)
-    client.send(generate_random_string().encode("ascii"))
+    client.send(movie_database[1].sample().iat[0, 1].encode("ascii"))
     while variables_for_user_link[2][clientID]:
         try:
             vote = client.recv(1024).decode("ascii").split("\x09")
@@ -60,7 +62,7 @@ def host_serve_client(client, clientID, variables_for_user_link):
             #variables_for_user_link[4][clientID] = True
             #while variables_for_user_link[4][clientID]:
             #    """Wait for vote to be recorded before sending a new movie title"""
-            client.send(generate_random_string().encode("ascii"))
+            client.send(movie_database[1].sample().iat[0, 1].encode("ascii"))
         except socket.timeout:
             pass
 
@@ -107,11 +109,3 @@ def client_shutdown(variables_for_user_link):
     variables_for_user_link[0] = False
     variables_for_user_link[4].join()
     variables_for_user_link[3].close()
-
-import random
-def generate_random_string():
-    random_string = ""
-    x = random.randint(2,7)
-    for i in range(x):
-        random_string += str(random.randint(0,9))
-    return random_string
