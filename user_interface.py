@@ -60,13 +60,13 @@ class MovieMatcher(App):
         # We might restrict filtering to the host
         # We can use buttons to select what to filter
         # For now we will just have buttons for streaming services
-        self.netflix_button = Button(text="Netflix")
+        self.netflix_button = Button(text="add Netflix")
         self.netflix_button.bind(on_press=self.press_netflix_button)
-        self.disney_plus_button = Button(text="Disney Plus")
+        self.disney_plus_button = Button(text="add Disney Plus")
         self.disney_plus_button.bind(on_press=self.press_disney_plus_button)
-        self.amazon_prime_button = Button(text="Amazon Prime")
+        self.amazon_prime_button = Button(text="add Amazon Prime")
         self.amazon_prime_button.bind(on_press=self.press_amazon_prime_button)
-        self.hulu_button = Button(text="Hulu")
+        self.hulu_button = Button(text="add Hulu")
         self.hulu_button.bind(on_press=self.press_hulu_button)
         # When the host has selected the streaming services to be used, We'll need to create a pandas dataframe
         self.next_button = Button(text="next")
@@ -100,6 +100,13 @@ class MovieMatcher(App):
         # This is for running tests and can be removed later
         self.client_shutdown_button = Button(text="shutdown")
         self.client_shutdown_button.bind(on_press=self.press_client_shutdown_button)
+        #######################################################################################################################################################
+        # A button to shutdown the socket for the client
+        # This is for running tests and can be removed later
+        self.host_upvote_button = Button(text="upvote")
+        self.host_upvote_button.bind(on_press=self.press_host_upvote_button)
+        self.host_downvote_button = Button(text="downvote")
+        self.host_downvote_button.bind(on_press=self.press_host_downvote_button)
         #######################################################################################################################################################
 
         # Everything is done through self.window, so that is what we return
@@ -227,6 +234,8 @@ class MovieMatcher(App):
         # The testing label is used for testing purposes
         # The code can be removed after testing is complete
         self.window.add_widget(self.testing_label)
+        self.window.add_widget(self.host_upvote_button)
+        self.window.add_widget(self.host_downvote_button)
         self.window.add_widget(self.host_shutdown_button)
         variables_for_user_link[0] = self
         #######################################################################################################################################################
@@ -237,6 +246,7 @@ class MovieMatcher(App):
             filter_services_list = list(set(filter_services_list) | set(variables_for_user_link[3][i]))
         movie_database.append(database.generate_database(filter_services_list))
         movie_database[0] = ""
+        self.testing_label.text = movie_database[1].iat[0, 1]
 
 
     #Function for the client to send streaming services filtering to the host
@@ -293,6 +303,8 @@ class MovieMatcher(App):
     def press_host_shutdown_button(self, instance):
         user_link.host_server_shutdown(variables_for_user_link)
         self.window.remove_widget(self.host_shutdown_button)
+        self.window.remove_widget(self.host_upvote_button)
+        self.window.remove_widget(self.host_downvote_button)
         self.testing_label.text = "shutdown"
     #######################################################################################################################################################
 
@@ -306,6 +318,38 @@ class MovieMatcher(App):
         self.window.remove_widget(self.client_shutdown_button)
         self.window.add_widget(self.testing_label)
         self.testing_label.text = "shutdown"
+    #######################################################################################################################################################
+
+    #######################################################################################################################################################
+    # Functions to be bound to host upvote/downvote buttons
+    def press_host_upvote_button(self, instance):
+        global user_votes
+        global variables_for_user_link
+
+        movie_num = len(user_votes[0])
+        user_votes[0].append(True)
+
+        windex = user_link.check_win(user_votes, movie_num)
+
+        print(user_votes)
+        # do stuff with winning movie
+        if windex >= 0:
+            print(windex)
+
+        
+        self.testing_label.text = movie_database[1].iat[movie_num + 1, 1]
+
+    def press_host_downvote_button(self, instance):
+        global user_votes
+        global variables_for_user_link
+
+        user_votes[0].append(False)
+
+        print(user_votes)
+
+        movie_num = len(user_votes[0])
+        self.testing_label.text = movie_database[1].iat[movie_num, 1]
+        print(user_votes)
     #######################################################################################################################################################
 
 MovieMatcher().run()
