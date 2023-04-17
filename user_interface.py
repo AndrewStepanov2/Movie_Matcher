@@ -7,6 +7,9 @@ from kivy.uix.textinput import TextInput
 import user_link
 variables_for_user_link = []
 
+# keeping track of user votes. 2D array of booleans. Each row is a user, host is 0.
+user_votes = [[]]
+
 import database
 movie_database = ["Wait"]
 filter_services_list = []
@@ -17,6 +20,9 @@ seen_movies_list = []
 class MovieMatcher(App):
 
     def build(self):
+
+        global user_votes
+        user_votes = [[]]
 
         global variables_for_user_link
         variables_for_user_link = []
@@ -106,7 +112,7 @@ class MovieMatcher(App):
         self.window.remove_widget(self.host_button)
         self.window.remove_widget(self.join_button)
         variables_for_user_link.append(True) # boolean value to stop the host's accepting thread
-        server, thread = user_link.start_hosting(variables_for_user_link, movie_database)
+        server, thread = user_link.start_hosting(variables_for_user_link, movie_database, user_votes)
         variables_for_user_link.append(server) # storing the socket that the host is using so that it can be shut down later
         variables_for_user_link.append(thread) # storing the host's accepting thread for proper termination later
         self.window.add_widget(self.IP_label)
