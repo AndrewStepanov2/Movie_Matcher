@@ -51,6 +51,12 @@ def host_accept_client(server, variables_for_user_link, movie_database, user_vot
 # Function for the threads for each client to run
 # For right now, it does nothing interesting
 def host_serve_client(client, clientID, variables_for_user_link, movie_database, user_votes):
+    client_filters = client.recv(1024).decode("ascii")[1:-1]
+    if client_filters == "":
+        """The client did not send any filters, so do nothing"""
+    else:
+        variables_for_user_link[3][clientID] = client_filters.split("\x09")
+    variables_for_user_link[4][clientID] = True
     while movie_database[0] == "Wait":
         """Wait for the database to be generated"""
     client.settimeout(0.2)
@@ -58,7 +64,6 @@ def host_serve_client(client, clientID, variables_for_user_link, movie_database,
     while variables_for_user_link[2][clientID]:
         try:
             vote = client.recv(1024).decode("ascii").split("\x09")
-            variables_for_user_link[3][clientID] = vote
             variables_for_user_link[0].testing_label.text = "Client #" + str(clientID+1) + " has " + vote[1] + "d " + vote[0]
 
             if vote[1] == "upvote":
@@ -104,6 +109,10 @@ def client_join_server(host_IP, variables_for_user_link):
 # Handles the connection to the host
 # For right now, it does nothing interesting
 def client_get_served(client, variables_for_user_link):
+    while variables_for_user_link[1] == "":
+        """Wait for the client to select filters"""
+    client.send(variables_for_user_link[1].encode("ascii"))
+    variables_for_user_link[1] = ""
     client.settimeout(0.2)
     while variables_for_user_link[0]:
         try:
@@ -130,7 +139,7 @@ def client_shutdown(variables_for_user_link):
 # Check if a movie has been decided upon
 # TODO: impliment
 def check_win(user_votes, index):
-    for i in range(user_votes):
+    for i in range(len(user_votes)):
         if (len(user_votes[i]) <= index):
             return -1
         if not user_votes[i, index]:
