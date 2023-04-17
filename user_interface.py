@@ -71,6 +71,8 @@ class MovieMatcher(App):
         # When the host has selected the streaming services to be used, We'll need to create a pandas dataframe
         self.next_button = Button(text="next")
         self.next_button.bind(on_press=self.press_next_button)
+        self.client_next_button = Button(text="next")
+        self.client_next_button.bind(on_press=self.press_client_next_button)
 
         #######################################################################################################################################################
         # A label for testing purposes
@@ -156,57 +158,62 @@ class MovieMatcher(App):
         #movie_database.append(database.generate_database(["netflix", "disney_plus", "amazon_prime", "hulu"]))
         self.window.remove_widget(self.input_IP)
         self.window.remove_widget(self.connect_button)
-        self.window.add_widget(self.client_movie_label)
-        while not variables_for_user_link[2]:
-            """Wait for the first movie title to be sent before allowing the client to vote"""
-        self.client_movie_label.text = variables_for_user_link[1]
-        self.window.add_widget(self.client_upvote_button)
-        self.window.add_widget(self.client_downvote_button)
-        self.window.add_widget(self.client_shutdown_button)
+        #self.window.add_widget(self.client_movie_label)
+        #while not variables_for_user_link[2]:
+        #    """Wait for the first movie title to be sent before allowing the client to vote"""
+        #self.client_movie_label.text = variables_for_user_link[1]
+        #self.window.add_widget(self.client_upvote_button)
+        #self.window.add_widget(self.client_downvote_button)
+        #self.window.add_widget(self.client_shutdown_button)
+        self.window.add_widget(self.netflix_button)
+        self.window.add_widget(self.disney_plus_button)
+        self.window.add_widget(self.amazon_prime_button)
+        self.window.add_widget(self.hulu_button)
+        self.window.add_widget(self.client_next_button)
 
 
     # Function to add or remove Netflix from filtering
     def press_netflix_button(self, instance):
         global filter_services_list
-        if (self.netflix_button.text == "Netflix"):
+        if (self.netflix_button.text == "add Netflix"):
             filter_services_list.append("netflix")
             self.netflix_button.text = "Netflix added"
         else:
             filter_services_list.remove("netflix")
-            self.netflix_button.text = "Netflix"
+            self.netflix_button.text = "add Netflix"
 
 
     # Function to add or remove Disney Plus from filtering
     def press_disney_plus_button(self, instance):
         global filter_services_list
-        if (self.disney_plus_button.text == "Disney Plus"):
+        if (self.disney_plus_button.text == "add Disney Plus"):
             filter_services_list.append("disney_plus")
             self.disney_plus_button.text = "Disney Plus added"
         else:
             filter_services_list.remove("disney_plus")
-            self.disney_plus_button.text = "Disney Plus"
+            self.disney_plus_button.text = "add Disney Plus"
 
 
     # Function to add or remove Amazon Prime from filtering
     def press_amazon_prime_button(self, instance):
         global filter_services_list
-        if (self.amazon_prime_button.text == "Amazon Prime"):
+        if (self.amazon_prime_button.text == "add Amazon Prime"):
             filter_services_list.append("amazon_prime")
             self.amazon_prime_button.text = "Amazon Prime added"
         else:
             filter_services_list.remove("amazon_prime")
-            self.amazon_prime_button.text = "Amazon Prime"
+            self.amazon_prime_button.text = "add Amazon Prime"
 
 
     # Function to add or remove Hulu from filtering
     def press_hulu_button(self, instance):
         global filter_services_list
-        if (self.hulu_button.text == "Hulu"):
+        if (self.hulu_button.text == "add Hulu"):
             filter_services_list.append("hulu")
             self.hulu_button.text = "Hulu added"
         else:
             filter_services_list.remove("hulu")
-            self.hulu_button.text = "Hulu"
+            self.hulu_button.text = "add Hulu"
 
 
     # Function to create the pandas dataframe when the host has selected the filters for the streaming services
@@ -223,9 +230,35 @@ class MovieMatcher(App):
         self.window.add_widget(self.host_shutdown_button)
         variables_for_user_link[0] = self
         #######################################################################################################################################################
+        global filter_services_list
+        for i in range(len(variables_for_user_link[3])):
+            while not variables_for_user_link[4][i]:
+                """Wait for client filtering to come in"""
+            filter_services_list = list(set(filter_services_list) | set(variables_for_user_link[3][i]))
         movie_database.append(database.generate_database(filter_services_list))
         movie_database[0] = ""
 
+
+    #Function for the client to send streaming services filtering to the host
+    def press_client_next_button(self, instance):
+        filters = "\x09"
+        global filter_services_list
+        for i in range(len(filter_services_list)):
+            filters += filter_services_list[i] + "\x09"
+        variables_for_user_link[1] = filters
+        self.window.remove_widget(self.netflix_button)
+        self.window.remove_widget(self.disney_plus_button)
+        self.window.remove_widget(self.amazon_prime_button)
+        self.window.remove_widget(self.hulu_button)
+        self.window.remove_widget(self.client_next_button)
+        self.window.add_widget(self.client_movie_label)
+        while not variables_for_user_link[2]:
+            """Wait for the first movie title to be sent before allowing the client to vote"""
+        self.client_movie_label.text = variables_for_user_link[1]
+        self.window.add_widget(self.client_upvote_button)
+        self.window.add_widget(self.client_downvote_button)
+        self.window.add_widget(self.client_shutdown_button)
+        
 
     # Function to allow the client to upvote a title
     def press_client_upvote_button(self, instance):
