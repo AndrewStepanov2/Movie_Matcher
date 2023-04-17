@@ -64,18 +64,20 @@ def host_serve_client(client, clientID, variables_for_user_link, movie_database,
     while variables_for_user_link[2][clientID]:
         try:
             vote = client.recv(1024).decode("ascii").split("\x09")
-            variables_for_user_link[0].testing_label.text = "Client #" + str(clientID+1) + " has " + vote[1] + "d " + vote[0]
+            # variables_for_user_link[0].testing_label.text = "Client #" + str(clientID+1) + " has " + vote[1] + "d " + vote[0]
+            windex = -1
 
             if vote[1] == "upvote":
                 user_votes[clientID+1].append(True)
+                windex = check_win(user_votes, len(user_votes[clientID+1]) - 1)
             else:
                 user_votes[clientID+1].append(False)
 
-            windex = check_win(user_votes, len(user_votes[clientID+1]) - 1)
 
-
+            print(user_votes)
             # do stuff with winning movie
-            # if windex >= 0:
+            if windex >= 0:
+                print(windex)
                 
 
 
@@ -142,6 +144,6 @@ def check_win(user_votes, index):
     for i in range(len(user_votes)):
         if (len(user_votes[i]) <= index):
             return -1
-        if not user_votes[i, index]:
+        if not user_votes[i][index]:
             return -1
     return index
