@@ -3,6 +3,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
+from kivy.clock import mainthread
 
 import user_link
 variables_for_user_link = []
@@ -16,6 +17,38 @@ filter_services_list = []
 
 data_structure_movies_list = []
 seen_movies_list = []
+
+import threading
+def next_thread(self):
+    global filter_services_list
+    global variables_for_user_link
+    global movie_database
+    for i in range(len(variables_for_user_link[3])):
+        while not variables_for_user_link[4][i]:
+            """Wait for client filtering to come in"""
+        filter_services_list = list(set(filter_services_list) | set(variables_for_user_link[3][i]))
+    movie_database.append(database.generate_database(filter_services_list).sample(frac=1))
+    movie_database[0] = ""
+    @mainthread
+    def next_thread_return(self):
+        self.testing_label.text = movie_database[1].iat[0, 1]
+        variables_for_user_link[0] = self
+        self.window.add_widget(self.host_upvote_button)
+        self.window.add_widget(self.host_downvote_button)
+        #self.window.add_widget(self.host_shutdown_button)
+    return next_thread_return(self)
+
+def client_next_thread(self):
+    global variables_for_user_link
+    while not variables_for_user_link[2]:
+        """Wait for the first movie title to be sent before allowing the client to vote"""
+    @mainthread
+    def client_next_thread_return(self):
+        self.client_movie_label.text = variables_for_user_link[1]
+        self.window.add_widget(self.client_upvote_button)
+        self.window.add_widget(self.client_downvote_button)
+        #self.window.add_widget(self.client_shutdown_button
+    return client_next_thread_return(self)
 
 class MovieMatcher(App):
 
@@ -233,20 +266,11 @@ class MovieMatcher(App):
         #######################################################################################################################################################
         # The testing label is used for testing purposes
         # The code can be removed after testing is complete
+        self.testing_label.text = "Waiting on streaming services from other users..."
         self.window.add_widget(self.testing_label)
-        self.window.add_widget(self.host_upvote_button)
-        self.window.add_widget(self.host_downvote_button)
-        self.window.add_widget(self.host_shutdown_button)
-        variables_for_user_link[0] = self
+        thread = threading.Thread(target=next_thread, args=(self,))
+        thread.start()
         #######################################################################################################################################################
-        global filter_services_list
-        for i in range(len(variables_for_user_link[3])):
-            while not variables_for_user_link[4][i]:
-                """Wait for client filtering to come in"""
-            filter_services_list = list(set(filter_services_list) | set(variables_for_user_link[3][i]))
-        movie_database.append(database.generate_database(filter_services_list))
-        movie_database[0] = ""
-        self.testing_label.text = movie_database[1].iat[0, 1]
 
 
     #Function for the client to send streaming services filtering to the host
@@ -261,13 +285,11 @@ class MovieMatcher(App):
         self.window.remove_widget(self.amazon_prime_button)
         self.window.remove_widget(self.hulu_button)
         self.window.remove_widget(self.client_next_button)
+        self.client_movie_label.text = "Waiting on streaming services from other users..."
         self.window.add_widget(self.client_movie_label)
-        while not variables_for_user_link[2]:
-            """Wait for the first movie title to be sent before allowing the client to vote"""
-        self.client_movie_label.text = variables_for_user_link[1]
-        self.window.add_widget(self.client_upvote_button)
-        self.window.add_widget(self.client_downvote_button)
-        self.window.add_widget(self.client_shutdown_button)
+        thread = threading.Thread(target=client_next_thread, args=(self,))
+        thread.start()
+
         
 
     # Function to allow the client to upvote a title
@@ -278,6 +300,12 @@ class MovieMatcher(App):
         variables_for_user_link[2] = False
         while not variables_for_user_link[2]:
             """Wait for the next movie title to be sent"""
+        if variables_for_user_link[1][0:7] == "winner\x09":
+            self.client_movie_label.text = "Winner: " + variables_for_user_link[1][7:]
+            self.window.remove_widget(self.client_upvote_button)
+            self.window.remove_widget(self.client_downvote_button)
+            user_link.client_shutdown(variables_for_user_link)
+            return
         self.client_movie_label.text = variables_for_user_link[1]
         if variables_for_user_link[1] == "\x09shutdown":
             self.window.remove_widget(self.client_upvote_button)
@@ -292,6 +320,12 @@ class MovieMatcher(App):
         variables_for_user_link[2] = False
         while not variables_for_user_link[2]:
             """Wait for the next movie title to be sent"""
+        if variables_for_user_link[1][0:7] == "winner\x09":
+            self.client_movie_label.text = "Winner: " + variables_for_user_link[1][7:]
+            self.window.remove_widget(self.client_upvote_button)
+            self.window.remove_widget(self.client_downvote_button)
+            user_link.client_shutdown(variables_for_user_link)
+            return
         self.client_movie_label.text = variables_for_user_link[1]
         if variables_for_user_link[1] == "\x09shutdown":
             self.window.remove_widget(self.client_upvote_button)
@@ -331,13 +365,20 @@ class MovieMatcher(App):
 
         windex = user_link.check_win(user_votes, movie_num)
 
-        print(user_votes)
+        #print(user_votes)
         # do stuff with winning movie
         if windex >= 0:
-            print(windex)
+            #print(windex)
+            movie_database[0] = movie_database[1].iat[windex, 1]
+        if movie_database[0] != "":
+            self.testing_label.text = "Winner: " + movie_database[0]
+            self.window.remove_widget(self.host_upvote_button)
+            self.window.remove_widget(self.host_downvote_button)
+            return threading.Thread(target=user_link.host_server_shutdown, args=(variables_for_user_link,))
+        else:
 
         
-        self.testing_label.text = movie_database[1].iat[movie_num + 1, 1]
+            self.testing_label.text = movie_database[1].iat[movie_num + 1, 1]
 
     def press_host_downvote_button(self, instance):
         global user_votes
@@ -345,11 +386,17 @@ class MovieMatcher(App):
 
         user_votes[0].append(False)
 
-        print(user_votes)
+        #print(user_votes)
+        if movie_database[0] != "":
+            self.testing_label.text = "Winner: " + movie_database[0]
+            self.window.remove_widget(self.host_upvote_button)
+            self.window.remove_widget(self.host_downvote_button)
+            return threading.Thread(target=user_link.host_server_shutdown, args=(variables_for_user_link,))
+        else:
 
-        movie_num = len(user_votes[0])
-        self.testing_label.text = movie_database[1].iat[movie_num, 1]
-        print(user_votes)
+            movie_num = len(user_votes[0])
+            self.testing_label.text = movie_database[1].iat[movie_num, 1]
+        #print(user_votes)
     #######################################################################################################################################################
 
 MovieMatcher().run()

@@ -59,7 +59,7 @@ def host_serve_client(client, clientID, variables_for_user_link, movie_database,
     variables_for_user_link[4][clientID] = True
     while movie_database[0] == "Wait":
         """Wait for the database to be generated"""
-    client.settimeout(0.2)
+    #client.settimeout(0.2)
     client.send(movie_database[1].iat[0, 1].encode("ascii"))
     while variables_for_user_link[2][clientID]:
         try:
@@ -74,21 +74,21 @@ def host_serve_client(client, clientID, variables_for_user_link, movie_database,
                 user_votes[clientID+1].append(False)
 
 
-            print(user_votes)
+            #print(user_votes)
             # do stuff with winning movie
             if windex >= 0:
-                print(windex)
+                #print(windex)
+                movie_database[0] = movie_database[1].iat[windex, 1]
                 
 
 
-            #variables_for_user_link[4][clientID] = True
-            #while variables_for_user_link[4][clientID]:
-            #    """Wait for vote to be recorded before sending a new movie title"""
-
-            movie_num = len(user_votes[clientID+1])
-            client.send(movie_database[1].iat[movie_num, 1].encode("ascii"))
-        except socket.timeout:
-            pass
+            if movie_database[0] != "":
+                client.send(("winner\x09" + movie_database[0]).encode("ascii"))
+            else:
+                movie_num = len(user_votes[clientID+1])
+                client.send(movie_database[1].iat[movie_num, 1].encode("ascii"))
+        except:
+            return
 
 # Function for closing the socket the host is using
 # Terminates the threads for each client before closing the host's socket
@@ -115,19 +115,16 @@ def client_get_served(client, variables_for_user_link):
         """Wait for the client to select filters"""
     client.send(variables_for_user_link[1].encode("ascii"))
     variables_for_user_link[1] = ""
-    client.settimeout(0.2)
+    #client.settimeout(0.2)
     while variables_for_user_link[0]:
-        try:
-            movie = client.recv(1024).decode("ascii")
-            variables_for_user_link[1] = movie
-            variables_for_user_link[2] = True
-            while variables_for_user_link[2]:
-                if not variables_for_user_link[0]:
-                    variables_for_user_link[1] = "voting\x09stoppe"
-                    variables_for_user_link[2] = False
-            client.send(variables_for_user_link[1].encode("ascii"))
-        except socket.timeout:
-            pass
+        movie = client.recv(1024).decode("ascii")
+        variables_for_user_link[1] = movie
+        variables_for_user_link[2] = True
+        while variables_for_user_link[2]:
+            if not variables_for_user_link[0]:
+                variables_for_user_link[1] = "voting\x09stoppe"
+                variables_for_user_link[2] = False
+        client.send(variables_for_user_link[1].encode("ascii"))
     variables_for_user_link[1] = "\x09shutdown"
     variables_for_user_link[2] = True
 
