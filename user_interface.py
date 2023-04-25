@@ -3,7 +3,10 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
+from kivy.uix.image import Image
 from kivy.clock import mainthread
+
+from simple_image_download import simple_image_download as simp
 
 import user_link
 variables_for_user_link = []
@@ -17,6 +20,12 @@ filter_services_list = []
 
 data_structure_movies_list = []
 seen_movies_list = []
+
+response = None
+
+def get_image(title):
+    response().download(title + " movie poster", 4)
+    return "simple_images/" + title + " movie poster/" + title + " movie poster_4.jpg"
 
 import threading
 def next_thread(self):
@@ -32,7 +41,10 @@ def next_thread(self):
     @mainthread
     def next_thread_return(self):
         self.testing_label.text = movie_database[1].iat[0, 1]
+        #self.window.remove_widget(self.testing_label)
         variables_for_user_link[0] = self
+        self.host_title_image.source = get_image(movie_database[1].iat[0, 1])
+        self.window.add_widget(self.host_title_image)
         self.window.add_widget(self.host_upvote_button)
         self.window.add_widget(self.host_downvote_button)
         #self.window.add_widget(self.host_shutdown_button)
@@ -45,6 +57,9 @@ def client_next_thread(self):
     @mainthread
     def client_next_thread_return(self):
         self.client_movie_label.text = variables_for_user_link[1]
+        #self.window.remove_widget(self.client_movie_label)
+        self.client_title_image.source = get_image(variables_for_user_link[1])
+        self.window.add_widget(self.client_title_image)
         self.window.add_widget(self.client_upvote_button)
         self.window.add_widget(self.client_downvote_button)
         #self.window.add_widget(self.client_shutdown_button
@@ -63,6 +78,10 @@ class MovieMatcher(App):
         movie_database = ["Wait"]
         global filter_services_list
         filter_services_list = []
+
+        global response
+        response = None
+        response = simp.simple_image_download
 
         # Let Kivy handle spacing of widgets
         # Kivy will put everything in one column
@@ -141,6 +160,9 @@ class MovieMatcher(App):
         self.host_downvote_button = Button(text="downvote")
         self.host_downvote_button.bind(on_press=self.press_host_downvote_button)
         #######################################################################################################################################################
+
+        self.host_title_image = Image()
+        self.client_title_image = Image()
 
         # Everything is done through self.window, so that is what we return
         return self.window
@@ -302,11 +324,13 @@ class MovieMatcher(App):
             """Wait for the next movie title to be sent"""
         if variables_for_user_link[1][0:7] == "winner\x09":
             self.client_movie_label.text = "Winner: " + variables_for_user_link[1][7:]
+            self.client_title_image.source = get_image(variables_for_user_link[1][7:])
             self.window.remove_widget(self.client_upvote_button)
             self.window.remove_widget(self.client_downvote_button)
             user_link.client_shutdown(variables_for_user_link)
             return
         self.client_movie_label.text = variables_for_user_link[1]
+        self.client_title_image.source = get_image(variables_for_user_link[1])
         if variables_for_user_link[1] == "\x09shutdown":
             self.window.remove_widget(self.client_upvote_button)
             self.window.remove_widget(self.client_downvote_button)
@@ -322,11 +346,13 @@ class MovieMatcher(App):
             """Wait for the next movie title to be sent"""
         if variables_for_user_link[1][0:7] == "winner\x09":
             self.client_movie_label.text = "Winner: " + variables_for_user_link[1][7:]
+            self.client_title_image.source = get_image(variables_for_user_link[1][7:])
             self.window.remove_widget(self.client_upvote_button)
             self.window.remove_widget(self.client_downvote_button)
             user_link.client_shutdown(variables_for_user_link)
             return
         self.client_movie_label.text = variables_for_user_link[1]
+        self.client_title_image.source = get_image(variables_for_user_link[1])
         if variables_for_user_link[1] == "\x09shutdown":
             self.window.remove_widget(self.client_upvote_button)
             self.window.remove_widget(self.client_downvote_button)
@@ -372,6 +398,7 @@ class MovieMatcher(App):
             movie_database[0] = movie_database[1].iat[windex, 1]
         if movie_database[0] != "":
             self.testing_label.text = "Winner: " + movie_database[0]
+            self.host_title_image.source = get_image(movie_database[0])
             self.window.remove_widget(self.host_upvote_button)
             self.window.remove_widget(self.host_downvote_button)
             return threading.Thread(target=user_link.host_server_shutdown, args=(variables_for_user_link,))
@@ -379,6 +406,8 @@ class MovieMatcher(App):
 
         
             self.testing_label.text = movie_database[1].iat[movie_num + 1, 1]
+            self.host_title_image.source = get_image(movie_database[1].iat[movie_num + 1, 1])
+
 
     def press_host_downvote_button(self, instance):
         global user_votes
@@ -389,6 +418,7 @@ class MovieMatcher(App):
         #print(user_votes)
         if movie_database[0] != "":
             self.testing_label.text = "Winner: " + movie_database[0]
+            self.host_title_image.source = get_image(movie_database[0])
             self.window.remove_widget(self.host_upvote_button)
             self.window.remove_widget(self.host_downvote_button)
             return threading.Thread(target=user_link.host_server_shutdown, args=(variables_for_user_link,))
@@ -396,6 +426,7 @@ class MovieMatcher(App):
 
             movie_num = len(user_votes[0])
             self.testing_label.text = movie_database[1].iat[movie_num, 1]
+            self.host_title_image.source = get_image(movie_database[1].iat[movie_num + 1, 1])
         #print(user_votes)
     #######################################################################################################################################################
 
