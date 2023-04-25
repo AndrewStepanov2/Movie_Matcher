@@ -7,6 +7,7 @@ from kivy.uix.image import Image
 from kivy.clock import mainthread
 
 from simple_image_download import simple_image_download as simp
+import os
 import shutil
 
 import user_link
@@ -328,7 +329,8 @@ class MovieMatcher(App):
             self.client_title_image.source = get_image(variables_for_user_link[1][7:])
             self.window.remove_widget(self.client_upvote_button)
             self.window.remove_widget(self.client_downvote_button)
-            shutil.rmtree("simple_images")
+            if os.path.exists("simple_images"):
+                shutil.rmtree("simple_images")
             user_link.client_shutdown(variables_for_user_link)
             return
         self.client_movie_label.text = variables_for_user_link[1]
@@ -351,7 +353,8 @@ class MovieMatcher(App):
             self.client_title_image.source = get_image(variables_for_user_link[1][7:])
             self.window.remove_widget(self.client_upvote_button)
             self.window.remove_widget(self.client_downvote_button)
-            shutil.rmtree("simple_images")
+            if os.path.exists("simple_images"):
+                shutil.rmtree("simple_images")
             user_link.client_shutdown(variables_for_user_link)
             return
         self.client_movie_label.text = variables_for_user_link[1]
