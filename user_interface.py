@@ -7,6 +7,7 @@ from kivy.uix.image import Image
 from kivy.clock import mainthread
 
 from simple_image_download import simple_image_download as simp
+import shutil
 
 import user_link
 variables_for_user_link = []
@@ -327,6 +328,7 @@ class MovieMatcher(App):
             self.client_title_image.source = get_image(variables_for_user_link[1][7:])
             self.window.remove_widget(self.client_upvote_button)
             self.window.remove_widget(self.client_downvote_button)
+            shutil.rmtree("simple_images")
             user_link.client_shutdown(variables_for_user_link)
             return
         self.client_movie_label.text = variables_for_user_link[1]
@@ -349,6 +351,7 @@ class MovieMatcher(App):
             self.client_title_image.source = get_image(variables_for_user_link[1][7:])
             self.window.remove_widget(self.client_upvote_button)
             self.window.remove_widget(self.client_downvote_button)
+            shutil.rmtree("simple_images")
             user_link.client_shutdown(variables_for_user_link)
             return
         self.client_movie_label.text = variables_for_user_link[1]
@@ -401,6 +404,7 @@ class MovieMatcher(App):
             self.host_title_image.source = get_image(movie_database[0])
             self.window.remove_widget(self.host_upvote_button)
             self.window.remove_widget(self.host_downvote_button)
+            shutil.rmtree("simple_images")
             return threading.Thread(target=user_link.host_server_shutdown, args=(variables_for_user_link,))
         else:
 
@@ -421,12 +425,13 @@ class MovieMatcher(App):
             self.host_title_image.source = get_image(movie_database[0])
             self.window.remove_widget(self.host_upvote_button)
             self.window.remove_widget(self.host_downvote_button)
+            shutil.rmtree("simple_images")
             return threading.Thread(target=user_link.host_server_shutdown, args=(variables_for_user_link,))
         else:
 
             movie_num = len(user_votes[0])
             self.testing_label.text = movie_database[1].iat[movie_num, 1]
-            self.host_title_image.source = get_image(movie_database[1].iat[movie_num + 1, 1])
+            self.host_title_image.source = get_image(movie_database[1].iat[movie_num, 1])
         #print(user_votes)
     #######################################################################################################################################################
 
