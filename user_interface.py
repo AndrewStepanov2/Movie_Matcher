@@ -25,12 +25,10 @@ seen_movies_list = []
 
 response = None
 
-def get_image(title):
-    entry = movie_database[1][movie_database[1]['title'] == title]
-    year = entry.iat[0,2]
-    service = entry.iat[0,6]
-    response().download(title + " " + str(year) + " " + service + " movie poster", 4)
-    return "simple_images/" + title + " " + str(year) + " " + service + " movie poster/" + title + " " + str(year) + " " + service + " movie poster_4.jpg"
+def get_image(title, year, service):
+    search = title + " " + year + " " + service + " poster filetype:jpg"
+    response().download(search, 4)
+    return "simple_images/" + search + "/" + search + "_4.jpg"
 
 import threading
 def next_thread(self):
@@ -48,7 +46,7 @@ def next_thread(self):
         self.testing_label.text = movie_database[1].iat[0, 1]
         #self.window.remove_widget(self.testing_label)
         variables_for_user_link[0] = self
-        self.host_title_image.source = get_image(movie_database[1].iat[0, 1])
+        self.host_title_image.source = get_image(movie_database[1].iat[0, 1], str(movie_database[1].iat[0, 2]), movie_database[1].iat[0, 6])
         self.window.add_widget(self.host_title_image)
         self.window.add_widget(self.host_upvote_button)
         self.window.add_widget(self.host_downvote_button)
@@ -57,18 +55,19 @@ def next_thread(self):
 
 def client_next_thread(self):
     global variables_for_user_link
-    movie_database.append(database.generate_database(["netflix", "disney_plus", "amazon_prime", "hulu"]))
+    #movie_database.append(database.generate_database(["netflix", "disney_plus", "amazon_prime", "hulu"]))
     while not variables_for_user_link[2]:
         """Wait for the first movie title to be sent before allowing the client to vote"""
     @mainthread
     def client_next_thread_return(self):
-        self.client_movie_label.text = variables_for_user_link[1]
+        entry = variables_for_user_link[1].split("\x09")
+        self.client_movie_label.text = entry[0]
         #self.window.remove_widget(self.client_movie_label)
-        self.client_title_image.source = get_image(variables_for_user_link[1])
+        self.client_title_image.source = get_image(entry[0], entry[1], entry[2])
         self.window.add_widget(self.client_title_image)
         self.window.add_widget(self.client_upvote_button)
         self.window.add_widget(self.client_downvote_button)
-        #self.window.add_widget(self.client_shutdown_button
+        #self.window.add_widget(self.client_shutdown_button)
     return client_next_thread_return(self)
 
 class MovieMatcher(App):
@@ -324,21 +323,23 @@ class MovieMatcher(App):
     def press_client_upvote_button(self, instance):
         if not variables_for_user_link[2]:
             return
-        variables_for_user_link[1] += "\x09upvote"
+        entry = variables_for_user_link[1].split("\x09")
+        variables_for_user_link[1] = entry[0] + "\x09upvote"
         variables_for_user_link[2] = False
         while not variables_for_user_link[2]:
             """Wait for the next movie title to be sent"""
+        entry = variables_for_user_link[1].split("\x09")
         if variables_for_user_link[1][0:7] == "winner\x09":
-            self.client_movie_label.text = "Winner: " + variables_for_user_link[1][7:]
-            self.client_title_image.source = get_image(variables_for_user_link[1][7:])
+            self.client_movie_label.text = "Winner: " + entry[1]
+            self.client_title_image.source = get_image(entry[1], entry[2], entry[3])
             self.window.remove_widget(self.client_upvote_button)
             self.window.remove_widget(self.client_downvote_button)
             if os.path.exists("simple_images"):
                 shutil.rmtree("simple_images")
             user_link.client_shutdown(variables_for_user_link)
             return
-        self.client_movie_label.text = variables_for_user_link[1]
-        self.client_title_image.source = get_image(variables_for_user_link[1])
+        self.client_movie_label.text = entry[0]
+        self.client_title_image.source = get_image(entry[0], entry[1], entry[2])
         if variables_for_user_link[1] == "\x09shutdown":
             self.window.remove_widget(self.client_upvote_button)
             self.window.remove_widget(self.client_downvote_button)
@@ -348,21 +349,23 @@ class MovieMatcher(App):
     def press_client_downvote_button(self, instance):
         if not variables_for_user_link[2]:
             return
-        variables_for_user_link[1] += "\x09downvote"
+        entry = variables_for_user_link[1].split("\x09")
+        variables_for_user_link[1] = entry[0] + "\x09downvote"
         variables_for_user_link[2] = False
         while not variables_for_user_link[2]:
             """Wait for the next movie title to be sent"""
+        entry = variables_for_user_link[1].split("\x09")
         if variables_for_user_link[1][0:7] == "winner\x09":
-            self.client_movie_label.text = "Winner: " + variables_for_user_link[1][7:]
-            self.client_title_image.source = get_image(variables_for_user_link[1][7:])
+            self.client_movie_label.text = "Winner: " + entry[1]
+            self.client_title_image.source = get_image(entry[1], entry[2], entry[3])
             self.window.remove_widget(self.client_upvote_button)
             self.window.remove_widget(self.client_downvote_button)
             if os.path.exists("simple_images"):
                 shutil.rmtree("simple_images")
             user_link.client_shutdown(variables_for_user_link)
             return
-        self.client_movie_label.text = variables_for_user_link[1]
-        self.client_title_image.source = get_image(variables_for_user_link[1])
+        self.client_movie_label.text = entry[0]
+        self.client_title_image.source = get_image(entry[0], entry[1], entry[2])
         if variables_for_user_link[1] == "\x09shutdown":
             self.window.remove_widget(self.client_upvote_button)
             self.window.remove_widget(self.client_downvote_button)
@@ -405,10 +408,11 @@ class MovieMatcher(App):
         # do stuff with winning movie
         if windex >= 0:
             #print(windex)
-            movie_database[0] = movie_database[1].iat[windex, 1]
+            movie_database[0] = movie_database[1].iat[windex, 1] + "\x09" + str(movie_database[1].iat[windex, 2]) + "\x09" + movie_database[1].iat[windex, 6]
         if movie_database[0] != "":
-            self.testing_label.text = "Winner: " + movie_database[0]
-            self.host_title_image.source = get_image(movie_database[0])
+            entry = movie_database[0].split("\x09")
+            self.testing_label.text = "Winner: " + entry[0]
+            self.host_title_image.source = get_image(entry[0], entry[1], entry[2])
             self.window.remove_widget(self.host_upvote_button)
             self.window.remove_widget(self.host_downvote_button)
             shutil.rmtree("simple_images")
@@ -417,7 +421,7 @@ class MovieMatcher(App):
 
         
             self.testing_label.text = movie_database[1].iat[movie_num + 1, 1]
-            self.host_title_image.source = get_image(movie_database[1].iat[movie_num + 1, 1])
+            self.host_title_image.source = get_image(movie_database[1].iat[movie_num + 1, 1], str(movie_database[1].iat[movie_num + 1, 2]), movie_database[1].iat[movie_num + 1, 6])
 
 
     def press_host_downvote_button(self, instance):
@@ -428,8 +432,9 @@ class MovieMatcher(App):
 
         #print(user_votes)
         if movie_database[0] != "":
-            self.testing_label.text = "Winner: " + movie_database[0]
-            self.host_title_image.source = get_image(movie_database[0])
+            entry = movie_database[0].split("\x09")
+            self.testing_label.text = "Winner: " + entry[0]
+            self.host_title_image.source = get_image(entry[0], entry[1], entry[2])
             self.window.remove_widget(self.host_upvote_button)
             self.window.remove_widget(self.host_downvote_button)
             shutil.rmtree("simple_images")
@@ -438,7 +443,7 @@ class MovieMatcher(App):
 
             movie_num = len(user_votes[0])
             self.testing_label.text = movie_database[1].iat[movie_num, 1]
-            self.host_title_image.source = get_image(movie_database[1].iat[movie_num, 1])
+            self.host_title_image.source = get_image(movie_database[1].iat[movie_num, 1], str(movie_database[1].iat[movie_num, 2]), movie_database[1].iat[movie_num, 6])
         #print(user_votes)
     #######################################################################################################################################################
 
