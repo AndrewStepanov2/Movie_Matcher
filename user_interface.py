@@ -26,8 +26,11 @@ seen_movies_list = []
 response = None
 
 def get_image(title):
-    response().download(title + " movie poster", 4)
-    return "simple_images/" + title + " movie poster/" + title + " movie poster_4.jpg"
+    entry = movie_database[1][movie_database[1]['title'] == title]
+    year = entry.iat[0,2]
+    service = entry.iat[0,6]
+    response().download(title + " " + str(year) + " " + service + " movie poster", 4)
+    return "simple_images/" + title + " " + str(year) + " " + service + " movie poster/" + title + " " + str(year) + " " + service + " movie poster_4.jpg"
 
 import threading
 def next_thread(self):
@@ -54,6 +57,7 @@ def next_thread(self):
 
 def client_next_thread(self):
     global variables_for_user_link
+    movie_database.append(database.generate_database(["netflix", "disney_plus", "amazon_prime", "hulu"]))
     while not variables_for_user_link[2]:
         """Wait for the first movie title to be sent before allowing the client to vote"""
     @mainthread
