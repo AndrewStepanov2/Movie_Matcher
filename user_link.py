@@ -5,11 +5,11 @@ import threading
 # socket.gethostbyname(socket.gethostname()) doesn't work as it will return 127.0.1.1
 # The function sets up a UDP connection with Google Public DNS and takes the IP address from that connection
 def get_IP():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    ip = s.getsockname()[0]
-    s.close()
-    return ip
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
+    s.connect(("8.8.8.8", 80)) 
+    ip = s.getsockname()[0] 
+    s.close() 
+    return ip 
 
 # Sets up a socket for the host
 # Starts a thread for accepting clients
