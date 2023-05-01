@@ -29,6 +29,12 @@ def get_image(title, year, service):
     search = title + " " + year + " " + service + " poster filetype jpg"
     search = search.replace(",", "")
     search = search.replace(":", "")
+    search = search.replace("/", "")
+    search = search.replace("*", "")
+    search = search.replace("?", "")
+    search = search.replace("|", "")
+    search = search.replace("<", "")
+    search = search.replace(">", "")
     if len(search) > 62:
         search = search[-62:]
         if search[0] == " ":
