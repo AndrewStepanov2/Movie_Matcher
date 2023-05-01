@@ -26,7 +26,7 @@ seen_movies_list = []
 response = None
 
 def get_image(title, year, service):
-    search = title + " " + year + " " + service + " poster filetype:jpg"
+    search = title + " " + year + " " + service + " poster filetype jpg"
     search.replace(",", "")
     if len(search) > 62:
         search = search[-62:]
