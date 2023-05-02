@@ -3,13 +3,13 @@ import threading
 
 # Returns the IP address of the computer that calls it as a string
 # socket.gethostbyname(socket.gethostname()) doesn't work as it will return 127.0.1.1
-# The function sets up a UDP connection with Google Public DNS
+# The function sets up a UDP connection with Google Public DNS and takes the IP address from that connection
 def get_IP():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    ip = s.getsockname()[0]
-    s.close()
-    return ip
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
+    s.connect(("8.8.8.8", 80)) 
+    ip = s.getsockname()[0] 
+    s.close() 
+    return ip 
 
 # Sets up a socket for the host
 # Starts a thread for accepting clients
@@ -60,7 +60,7 @@ def host_serve_client(client, clientID, variables_for_user_link, movie_database,
     while movie_database[0] == "Wait":
         """Wait for the database to be generated"""
     #client.settimeout(0.2)
-    client.send(movie_database[1].iat[0, 1].encode("ascii"))
+    client.send((movie_database[1].iat[0, 1] + "\x09" + str(movie_database[1].iat[0, 2]) + "\x09" + movie_database[1].iat[0, 6]).encode("ascii"))
     while variables_for_user_link[2][clientID]:
         try:
             vote = client.recv(1024).decode("ascii").split("\x09")
@@ -78,7 +78,7 @@ def host_serve_client(client, clientID, variables_for_user_link, movie_database,
             # do stuff with winning movie
             if windex >= 0:
                 #print(windex)
-                movie_database[0] = movie_database[1].iat[windex, 1]
+                movie_database[0] = movie_database[1].iat[windex, 1] + "\x09" + str(movie_database[1].iat[windex, 2]) + "\x09" + movie_database[1].iat[windex, 6]
                 
 
 
@@ -86,7 +86,7 @@ def host_serve_client(client, clientID, variables_for_user_link, movie_database,
                 client.send(("winner\x09" + movie_database[0]).encode("ascii"))
             else:
                 movie_num = len(user_votes[clientID+1])
-                client.send(movie_database[1].iat[movie_num, 1].encode("ascii"))
+                client.send((movie_database[1].iat[movie_num, 1] + "\x09" + str(movie_database[1].iat[movie_num, 2]) + "\x09" + movie_database[1].iat[movie_num, 6]).encode("ascii"))
         except:
             return
 
